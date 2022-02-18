@@ -8,26 +8,25 @@ K = np.array([[2.9580, 0, 0, 3.1090, 0, 0], [0, 2.9580, 0, 0, 3.1090, 0],[0, 0, 
 gainmatrix = np.array([[1.5811, 0, 0 , 15.9111 , 0 , 0],[0,1.5811,0,0 , 15.9111, 0],[0,0 ,1.5811,0,0,15.9111]])
 Kr = 40
 
-def controller(quad, extendkalmanflter,sensor,I,mass,endpoints,dyaw,dt):
+def controller(quad,sensor,I,mass,endpoints,dyaw,dt):
     observe = sensor.update(quad,dt)
-    f = observe[0:3]
-    w = observe[3:6]
+    full_obs = sensor.Y_obs2().reshape(12,)
     # get quadcopter estimated state
-    state_est = extendkalmanflter.update(f,w,sensor.Y_obs3(),dt)
+    #state_est = extendkalmanflter.update(f,w,sensor.Y_obs3(),dt)
     pos_ref = endpoints.reshape(3, 1)
     v_ref = np.array([[0], [0], [0]])
 
-    pos_est = state_est[0:3]
-    v_est = state_est[3:6]
-    or_est = state_est[6:9].reshape(3, 1)
-    w_est = state_est[9:12].reshape(3, 1)
-
+    pos_est = full_obs[0:3]
+    v_est = full_obs[3:6]
+    or_est = full_obs[6:9].reshape(3, 1)
+    w_est = full_obs[9:12].reshape(3, 1)
+    
     #  Compute thrust
     Z_E = np.array([[0.0], [0.0], [1.0]])  # the Z axis of Earth frame expressed in body frame is equal to Z_b...
 
     ref_state = np.array([[pos_ref[0][0]], [pos_ref[1][0]],[pos_ref[2][0]], [v_ref[0][0]],[v_ref[1][0]], [v_ref[2][0]]])
     est_state = np.array([[pos_est[0]], [pos_est[1]],[pos_est[2]], [v_est[0]],[v_est[1]], [v_est[2]]])
-    ua = -np.dot(K,est_state - ref_state)
+    ua = -np.dot(K,est_state - ref_state)# control u = -K(X_hat-X_ref)
     F = (((ua[2][0]) + params.g) * mass) / (np.cos(state_est[6]) * np.cos(state_est[7]))
     #  Compute torque
     #  Compute desired orientation

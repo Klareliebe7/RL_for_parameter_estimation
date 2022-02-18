@@ -37,7 +37,7 @@ class Sensor:
         y[6:9] = np.array([0, 0, 0])
         return y.reshape(12,1)
     def position_noisy(self):
-        return self.YMea[0:3]
+        return self.YMea [0:3]
 
 
 

@@ -99,7 +99,7 @@ class ActorNetwork(nn.Module):
 
         #self.bn1 = nn.BatchNorm1d(self.fc1_dims)
         #self.bn2 = nn.BatchNorm1d(self.fc2_dims)
-        self.sig = nn.Sigmoid()
+
         self.mu = nn.Linear(self.fc2_dims, self.n_actions)
 
         f2 = 1./np.sqrt(self.fc2.weight.data.size()[0])
@@ -127,7 +127,7 @@ class ActorNetwork(nn.Module):
         x = self.bn2(x)
         x = F.relu(x)
         x = T.tanh(self.mu(x))
-        x = self.sig(x)
+
         return x
 
     def save_checkpoint(self):

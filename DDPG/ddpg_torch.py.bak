@@ -35,6 +35,8 @@ class Agent():
 
     def choose_action(self, observation):
         self.actor.eval()
+        print(f"choose_action input observation:\n{observation}")
+
         state = T.tensor([observation], dtype=T.float).to(self.actor.device)
         mu = self.actor.forward(state).to(self.actor.device)
         mu_prime = mu + T.tensor(self.noise(), 
