@@ -13,7 +13,7 @@ class Quadcopter:
     params - system parameters struct, g, mass, etc.
     """
 
-    def __init__(self, pos, attitude):
+    def __init__(self, pos, attitude,mass = 0.18, I = np.array([(0.00025, 0, 0),(0, 0.00031, 0),(0, 0, 0.00020)])):
         """ pos = [x,y,z] attitude = [phi, theta, psi]
             """
         self.state = np.array([1, 0.5, 0, 0.1, 0.1, 0.1, 0, 0, 0, 0.1,0.1,0.1])
@@ -25,7 +25,9 @@ class Quadcopter:
         self.state[7] = theta
         self.state[8] = psi
         self.statedot = np.zeros(12)
-
+        self.mass = mass
+        self.I = I
+        self.invI = np.linalg.inv(self.I)
     def world_frame(self):
         """ position returns a 3x6 matrix
             where row is [x, y, z] column is m1 m2 m3 m4 origin h
@@ -61,12 +63,12 @@ class Quadcopter:
 
         # acceleration - Newton's second law of motion
         wRb = RPYToRot(phi, theta, psi) #from body to world rotation matrix
-        accel = -params.g*params.e3 + (F/params.mass)*np.dot(wRb.T,params.e3)
+        accel = -params.g*params.e3 + (F/self.mass)*np.dot(wRb.T,params.e3)
         omega = np.array([wx, wy, wz])
         # euler angle rates
         eulerdot = np.dot(Eulermatrix(phi, theta, psi),omega.reshape(3,1))
         # Angular acceleration
-        omegadot = params.invI.dot( M.flatten() - np.cross(omega, params.I.dot(omega)) )
+        omegadot = self.invI.dot( M.flatten() - np.cross(omega, self.I.dot(omega)) )
 
         state_dot = np.zeros(12)
         state_dot[0]  = xdot
@@ -94,7 +96,7 @@ class Quadcopter:
         # random noise
         W =  np.random.normal(0, np.sqrt(dt)*dt, 4).reshape(4,1)
 
-        Rm = (1.0 / params.mass) * np.dot(wRb, params.e3)
+        Rm = (1.0 / self.mass) * np.dot(wRb, params.e3)
 
         G = np.array([[0, 0, 0, 0],
                       [0 ,0 ,0, 0],
@@ -105,9 +107,9 @@ class Quadcopter:
                       [0, 0, 0, 0],
                       [0, 0, 0, 0],
                       [0, 0, 0, 0],
-                      [0, params.invI[0][0], 0, 0],
-                      [0, 0, params.invI[1][1], 0],
-                      [0, 0, 0, params.invI[2][2]],
+                      [0, self.invI[0][0], 0, 0],
+                      [0, 0, self.invI[1][1], 0],
+                      [0, 0, 0, self.invI[2][2]],
                       ])
 
 

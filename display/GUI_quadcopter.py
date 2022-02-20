@@ -4,12 +4,18 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 import sys
+import global_var
 history = np.zeros((3000,3))
 count = 0
+def init_ani():
+    history = np.zeros((3000,3))
+    count = 0
+    an.frame_seq = an.new_frame_seq() 
 def plot_quad_3d(waypoints, get_world_frame):
     """
     get_world_frame is a function which return the "next" world frame to be drawn
     """
+
     fig = plt.figure()
     ax = fig.add_axes([0, 0, 1, 1], projection='3d')
     ax.plot([], [], [], '-', c='g',markersize=30)[0]
@@ -17,7 +23,7 @@ def plot_quad_3d(waypoints, get_world_frame):
     ax.plot([], [], [], 'o', c='blue', marker='o', markevery=2)[0]
     ax.plot([], [], [], '*', c='red', markersize=8)[0]
     ax.plot([], [], [], '.', c='blue', markersize=1)[0]
-    set_limit((0, 7), (-1, 6), (-1, 7))
+    set_limit((0, 10), (0, 10), (0, 10))
     plot_waypoints(waypoints)
     ax.set_xlabel('X(m)',fontsize=20)
     ax.set_ylabel('Y(m)',fontsize=20)
@@ -30,13 +36,11 @@ def plot_quad_3d(waypoints, get_world_frame):
                                  init_func=None,
                                  frames=3000, interval=10, blit=False)
 
-
-
     if len(sys.argv) > 1 and sys.argv[1] == 'save':
         print('Saving gif')
         an.save('df3_airdrag.gif', dpi=80, writer='imagemagick', fps=60)
     else:
-        plt.show()
+        plt.show( )
 
 def plot_waypoints(waypoints):
     ax = plt.gca()
@@ -52,7 +56,10 @@ def set_limit(x, y, z):
     ax.set_zlim(z)
 
 def anim_callback(i, get_world_frame):
-    frame = get_world_frame#(i)   ?????????????????????????????????????????????????????
+    if   global_var.get_value("done") == True:
+        plt.close()
+        return 
+    frame = get_world_frame(i)   
     set_frame(frame)
 
 def set_frame(frame):

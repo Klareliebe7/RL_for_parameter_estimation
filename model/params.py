@@ -1,13 +1,13 @@
 import numpy as np
 
-mass = 0.18 # kg
+#mass = 0.18 # kg
 
 g = 9.81 # m/s/s
-I = np.array([(0.00025, 0, 0),
-              (0, 0.00031, 0),
-              (0, 0, 0.00020)])
+#I = np.array([(0.00025, 0, 0),
+#              (0, 0.00031, 0),
+#              (0, 0, 0.00020)])
 
-invI = np.linalg.inv(I)
+#invI = np.linalg.inv(I)
 
 arm_length = 0.086 # meter
 height = 0.05
