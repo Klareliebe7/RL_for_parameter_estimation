@@ -7,6 +7,7 @@ import sys
 import global_var
 history = np.zeros((3000,3))
 count = 0
+show_animation = True################## still not working
 def init_ani():
     history = np.zeros((3000,3))
     count = 0
@@ -40,7 +41,8 @@ def plot_quad_3d(waypoints, get_world_frame):
         print('Saving gif')
         an.save('df3_airdrag.gif', dpi=80, writer='imagemagick', fps=60)
     else:
-        plt.show( )
+        if show_animation:
+            plt.show( )
 
 def plot_waypoints(waypoints):
     ax = plt.gca()
@@ -56,7 +58,7 @@ def set_limit(x, y, z):
     ax.set_zlim(z)
 
 def anim_callback(i, get_world_frame):
-    if   global_var.get_value("done") == True:
+    if   global_var.get_value("done") == True and show_animation:
         plt.close()
         return 
     frame = get_world_frame(i)   
@@ -82,4 +84,4 @@ def set_frame(frame):
     yline = history[:count,1]
     lines[-1].set_data(xline, yline)
     lines[-1].set_3d_properties(zline)
-    ax.plot3D(xline, yline, zline, 'brown')
+    #ax.plot3D(xline, yline, zline, 'brown')

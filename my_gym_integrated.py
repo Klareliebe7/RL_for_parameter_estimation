@@ -90,13 +90,16 @@ class Quadrotor_Env(gym.Env):
         self.k = [0]
         #self.waypoints = np.array([[0.5, 1, 0], [4, 3, 3], [3, 5, 4], [6, 4, 5],[4,3,4],[2,1,5]])
         self.yaw = np.array([[0], [0], [0], [0],[0],[0]])
-        self.targetpoint =  np.random.rand(3)*10# 
-        self.startpoint = np.array([5, 5, 5])#
+        self.targetpoint =  np.array([6, 6, 9])#np.random.rand(3)*10# 
+        self.startpoint = np.array([5, 5, 1])#
         self.dyaw =  self.yaw[1]
         self.pos =  self.startpoint
         self.attitude = (0, 0, 0)
         #self.extendkalmanfilter = extendKalmanFilter()
-        self.quadcopter = Quadcopter( self.pos,  self.attitude)
+        self.mass_variant_param = np.random.rand()*2+1
+        self.real_mass = 0.18*self.mass_variant_param
+        self.real_I = np.array([(0.00025*self.mass_variant_param, 0, 0),(0, 0.00031*self.mass_variant_param, 0),(0, 0, 0.00020*self.mass_variant_param)])
+        self.quadcopter = Quadcopter(self.pos, self.attitude,self.real_mass,self.real_I )
         self.sensor = Sensor()
         #self.ii = 1
         self.a0 = 0.0001
@@ -171,23 +174,32 @@ class Quadrotor_Env(gym.Env):
         self.Iyy_his.append(a1)
         self.Izz_his.append(a2)
         self.Mass_his.append(m)
-        if self.step_ctr%10 == 0:
-            print("filter(lambda position: position <-0.5 and postion> 10.5, self.quadcopter.position())")
-            print(self.quadcopter.position())
-            print(list(filter(lambda position: position <-0.5 or position> 10.5, self.quadcopter.position())))
+        info = f"mass error: {100*(m-self.real_mass)/m:.3f}%"
         
-     	# went out of boundary
+        if m <0 or a0<0 or a1<0 or a2<0:
+            reward+= -1000000
+            done = True
+            info= f"calculation error"
+            return np.hstack((self.state , self.system_input )), reward, done, info
+        # went out of boundary
         if list(filter(lambda position: position <-0.5 or position> 10.5, self.quadcopter.position())) != []:
             reward+= -1000000
             done = True
-        # reached a target point
+            info= f"went out of boundary{self.quadcopter.position()}"
+            return np.hstack((self.state , self.system_input )), reward, done, info
+        #too much steps
         if  self.step_ctr > self.max_steps:
             done = True
             reward-=1000000
+            info= f"too much steps"
+            return np.hstack((self.state , self.system_input )), reward, done, info
+        # reached a target point
         if distance(self.quadcopter.position(), self.targetpoint) < 0.1:
             #self.ii = self.ii + 1
             reward += 1000000
             done = True
+            info= f"reached a target point!\n mass error: {100*(m-self.real_mass)/m:.3f}%"
+            return np.hstack((self.state , self.system_input )), reward, done, info
             #if self.ii < len(self.waypoints):
                # self.targetpoint = self.waypoints[self.ii]
                 #self.dyaw = self.yaw[self.ii]
@@ -210,10 +222,9 @@ class Quadrotor_Env(gym.Env):
         self.state = self.sensor.Y_obs2().reshape(12,)
         self.step_ctr += 1
         self.system_input = np.array([m1, m2, m3, F])
-        if m == float('nan'):
-            done = True
+
         # placeholder for information
-        info = {}
+        
         #print(f"self.state{np.hstack((self.state[0], self.targetpoint))}")
         #print(f"self.targetpoint{self.targetpoint}")
         #sprint(f"done=============================> {done}")
@@ -236,13 +247,16 @@ class Quadrotor_Env(gym.Env):
         self.k = [0]
         #self.waypoints = np.array([[0.5, 1, 0], [4, 3, 3], [3, 5, 4], [6, 4, 5],[4,3,4],[2,1,5]])
         self.yaw = np.array([[0], [0], [0], [0],[0],[0]])
-        self.targetpoint =  np.random.rand(3)*10
-        self.startpoint = np.array([5, 5, 5])#
+        self.targetpoint =  np.array([6, 6, 9])#np.random.rand(3)*10
+        self.startpoint = np.array([5, 5, 1])#
         self.dyaw = self.yaw[1]
         self.pos = self.startpoint
         self.attitude = (0, 0, 0)
-
-        self.quadcopter = Quadcopter(self.pos, self.attitude)
+        
+        self.mass_variant_param = np.random.rand()*2+1
+        self.real_mass = 0.18*self.mass_variant_param
+        self.real_I = np.array([(0.00025*self.mass_variant_param, 0, 0),(0, 0.00031*self.mass_variant_param, 0),(0, 0, 0.00020*self.mass_variant_param)])
+        self.quadcopter = Quadcopter(self.pos, self.attitude,self.real_mass,self.real_I )
         self.sensor = Sensor()
         #self.ii = 1
         self.a0 = 0.0001

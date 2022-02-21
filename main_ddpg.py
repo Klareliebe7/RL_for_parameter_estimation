@@ -54,12 +54,16 @@ def main():
             score += reward
             observation = observation_
 
-            if ctr%10== 0:
+            if ctr%10== 0 :
                 print(f"=====  Step:   {ctr}========")
-                print(f"Reward: {reward}")
-                print(f"Score: {score}")
-                print(f"m :{action[0]}\na0:{action[1]} \na1:{action[2]} \na2:{action[3]}  ")
-                print(f"Obssservation is :\n{observation}")
+                if info:
+                    print(info)
+                # print(f"Reward: {reward}")
+                # print(f"Score: {score}")
+                # print(f"Real mass:{env.quadcopter.mass}")
+                # print(f"m :{action[0]}\na0:{action[1]} \na1:{action[2]} \na2:{action[3]}  ")
+                # print(f"Obssservation is :\n{observation}")
+                
             return env.quadcopter.world_frame()
         try:
             plot_quad_3d(np.vstack((env.startpoint , env.targetpoint)), ani_loop)
