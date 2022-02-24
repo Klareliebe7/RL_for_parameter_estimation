@@ -11,7 +11,7 @@ show_animation = True################## still not working
 def init_ani():
     history = np.zeros((3000,3))
     count = 0
-    an.frame_seq = an.new_frame_seq() 
+    #an.frame_seq = an.new_frame_seq() 
 def plot_quad_3d(waypoints, get_world_frame):
     """
     get_world_frame is a function which return the "next" world frame to be drawn
@@ -43,7 +43,7 @@ def plot_quad_3d(waypoints, get_world_frame):
     else:
         if show_animation:
             plt.show( )
-
+    
 def plot_waypoints(waypoints):
     ax = plt.gca()
     lines = ax.get_lines()
@@ -76,12 +76,12 @@ def set_frame(frame):
 
     global history, count
     # plot history trajectory
-    history[count] = frame[:,4]
-    if count < np.size(history, 0) - 1:
-        count += 1
-    zline = history[:count,-1]
-    xline = history[:count,0]
-    yline = history[:count,1]
-    lines[-1].set_data(xline, yline)
-    lines[-1].set_3d_properties(zline)
+    # history[count] = frame[:,4]
+    # if count < np.size(history, 0) - 1:
+        # count += 1
+    # zline = history[:count,-1]
+    # xline = history[:count,0]
+    # yline = history[:count,1]
+    # lines[-1].set_data(xline, yline)
+    # lines[-1].set_3d_properties(zline)
     #ax.plot3D(xline, yline, zline, 'brown')

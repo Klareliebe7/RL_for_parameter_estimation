@@ -46,23 +46,25 @@ def main():
             nonlocal ctr
             ctr+= 1 
             action = agent.choose_action(observation)
-            action = action.T*(np.array([1,0.001,0.001,0.001]))
-            observation_, reward, done, info = env.step(action)
+            
+            #print(action)
+            #action = action.T*(np.array([1,0.001,0.001,0.001]))
+            observation_, reward, done, info = env.step(action[0]*0.36+0.18)
+            print(action[0]*0.36+0.18)
             global_var.set_value("done",done)
             agent.remember(observation, action, reward, observation_, done)
             agent.learn()
             score += reward
             observation = observation_
 
-            if ctr%10== 0 or info!= "":
+            if done:
                 print(f"=====  Step:   {ctr}========")
-                if info:
-                    print(info)
-                # print(f"Reward: {reward}")
-                # print(f"Score: {score}")
-                # print(f"Real mass:{env.quadcopter.mass}")
-                # print(f"m :{action[0]}\na0:{action[1]} \na1:{action[2]} \na2:{action[3]}  ")
-                # print(f"Obssservation is :\n{observation}")
+                print(info)
+                print(f"Reward: {reward}")
+                print(f"Score: {score}")
+                print(f"Real mass:{env.quadcopter.mass}")
+                print(f"m :{action[0]}")#\na0:{action[1]} \na1:{action[2]} \na2:{action[3]}  ")
+                print(f"Obssservation is :\n{observation}")
                 
             return env.quadcopter.world_frame()
         try:
