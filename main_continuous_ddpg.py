@@ -2,7 +2,7 @@ import gym
 import numpy as np
 from DDPG.ddpg_torch import Agent
 from DDPG.utils import plot_learning_curve
-from my_gym_integrated import Quadrotor_Env
+from quad_gym_continuous import Quadrotor_Env
 from display.GUI_quadcopter import plot_quad_3d , init_ani
 import global_var
 

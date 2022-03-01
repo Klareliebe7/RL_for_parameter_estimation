@@ -1,25 +1,23 @@
 import gym
 import numpy as np
-from DDPG.ddpg_torch import Agent
-from DDPG.utils import plot_learning_curve
-from my_gym_integrated import Quadrotor_Env
+from DQN.DQN import Agent
+from DQN.utils import plotLearning
+from quad_gym_descrete import Quadrotor_Env_discrete
 from display.GUI_quadcopter import plot_quad_3d , init_ani
 import global_var
 
 def main():
-    env = Quadrotor_Env()
-    #env = gym.make('LunarLanderContinuous-v2')
+    env = Quadrotor_Env_discrete()
 
-    agent = Agent(alpha=0.0001, beta=0.001, 
-                    input_dims=env.observation_space.shape, tau=0.001,
-                    batch_size=64, fc1_dims=400, fc2_dims=300, 
-                    n_actions=env.action_space.shape[0])
+    agent = Agent(gamma=0.99, epsilon=1.0, batch_size=64, n_actions=3, eps_end=0.01, input_dims=env.observation_space.shape, lr=0.001,save_path = "./DQN/check_point/dqn_model")
+    score_history, eps_history = [], []
+ 
     n_games = 1000
-    filename = 'Quadrotor_alpha_' + str(agent.alpha) + '_beta_' + str(agent.beta) + '_' + str(n_games) + 'simulations'
-    figure_file = 'plots/' + filename + '.png'
+    filename = 'Quadrotor_alpha_discrete'
+
 
     best_score = env.reward_range[0]
-    score_history = []
+
     
     
         
@@ -27,7 +25,7 @@ def main():
         observation = env.reset()
         done = False
         score = 0
-        agent.noise.reset()
+         
         print(f"... doing {i} run ...")
         ctr = 0
         global_var._init()
@@ -36,34 +34,30 @@ def main():
             nonlocal env
             nonlocal agent
             nonlocal n_games
-            nonlocal filename
-            nonlocal figure_file
+            nonlocal filename           
             nonlocal best_score
             nonlocal score_history
+            nonlocal eps_history
             nonlocal observation
             nonlocal done
             nonlocal score
             nonlocal ctr
             ctr+= 1 
-            action = agent.choose_action(observation)
-            
-            #print(action)
-            #action = action.T*(np.array([1,0.001,0.001,0.001]))
-            observation_, reward, done, info = env.step(action[0]*0.36+0.18)
-            #print(action[0]*0.36+0.18)
+            action = agent.choose_action(observation)  
+            observation_, reward, done, info = env.step(action)
             global_var.set_value("done",done)
-            agent.remember(observation, action, reward, observation_, done)
+            agent.store_transition(observation, action, reward, observation_, done)
             agent.learn()
             score += reward
             observation = observation_
 
-            if done:
+            if False:
                 print(f"=====  Step:   {ctr}========")
                 print(info)
                 print(f"Reward: {reward}")
                 print(f"Score: {score}")
                 print(f"Real mass:{env.quadcopter.mass}")
-                print(f"m :{action[0]}")#\na0:{action[1]} \na1:{action[2]} \na2:{action[3]}  ")
+                print(f"action :{action }") 
                 print(f"Obssservation is :\n{observation}")
                 
             return env.quadcopter.world_frame()
@@ -72,6 +66,7 @@ def main():
         except ValueError:
             init_ani()
         score_history.append(score)
+        eps_history.append(agent.epsilon)
         avg_score = np.mean(score_history[-100:])
         
         if avg_score > best_score:
@@ -81,11 +76,14 @@ def main():
         print('episode ', i, 'score %.1f' % score,
                 'average score %.1f' % avg_score)
     x = [i+1 for i in range(n_games)]
-    plot_learning_curve(x, score_history, figure_file)
+    plotLearning(x, score_history, eps_history, filename)
 
 
 
 if __name__ == "__main__":
 
     main()
+    
+    
+
 
