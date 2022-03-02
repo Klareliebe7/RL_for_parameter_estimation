@@ -10,7 +10,7 @@ from EM_parameter_estimation.em_est import em_estimation
 from sim.result_plot import Plotresult
 from utils.check_distance import distance
 import json
- 
+ #S319 1st etage
 class Quadrotor_Env_discrete(gym.Env):
     """
     ## Description
@@ -166,6 +166,10 @@ class Quadrotor_Env_discrete(gym.Env):
         done = False
         reward = 0
         self.mass_estimate += 0.01*(action-1)
+        if self.mass_estimate < 0.15:
+            self.mass_estimate = 0.15
+        elif self.mass_estimate> 1:
+            self.mass_estimate = 1
         self.Mass_his.append(self.mass_estimate )       
         ratio = self.mass_estimate/0.18
         I = np.array([(0.00025, 0, 0),
@@ -280,7 +284,7 @@ class Quadrotor_Env_discrete(gym.Env):
         m1 = M[0][0]
         m2 = M[1][0]
         m3 = M[2][0]
-        if self.mission == "hovering":
+        if self.mission == "hovering":# entrophy of action, other solutions and comparation
             reward +=  - (distance(self.sensor.position_noisy(), self.targetpoint) *10)**3
             self.reward_list.append(reward)
         elif self.mission == "approching":
