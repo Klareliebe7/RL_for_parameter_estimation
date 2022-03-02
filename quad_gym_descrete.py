@@ -242,7 +242,7 @@ class Quadrotor_Env_discrete(gym.Env):
         if self.mission == "hovering":
             #calculate error
             if self.mass_estimate < 0: 
-                reward+= -10000
+                #reward+= -10000
                 done = True
                 info["msg"] = f"calculation error "
                 info["result"] = False
@@ -254,7 +254,7 @@ class Quadrotor_Env_discrete(gym.Env):
 
             # went out of boundary
             if list(filter(lambda position: position <-0.5 or position> 10.5, self.quadcopter.position())) != []:
-                reward+= -10000
+                #reward+= -10000
                 done = True
                 info["msg"]= f"went out of boundary{self.quadcopter.position()}"
                 info["result"] = False
@@ -266,7 +266,7 @@ class Quadrotor_Env_discrete(gym.Env):
             # finished iteration
             if  self.step_ctr > self.max_steps:
                 done = True
-                reward+=10000
+                #reward+=10000
                 info["msg"]= f"hovering iteration stopping"
                 info["result"] = True
                 info["real_mass"] = self.real_mass
@@ -281,7 +281,7 @@ class Quadrotor_Env_discrete(gym.Env):
         m2 = M[1][0]
         m3 = M[2][0]
         if self.mission == "hovering":
-            reward +=  - distance(self.sensor.position_noisy(), self.targetpoint) **3
+            reward +=  - (distance(self.sensor.position_noisy(), self.targetpoint) *10)**3
             self.reward_list.append(reward)
         elif self.mission == "approching":
             reward += -1
@@ -295,7 +295,7 @@ class Quadrotor_Env_discrete(gym.Env):
         two_directionvectors = np.hstack((self.target_quad_vector  , self.target_startpoint_vector ))
         observation = np.hstack((states_and_input , two_directionvectors))  
         
-        print(f"real m:{self.real_mass:.3f} estimated m: {self.mass_estimate:.3f}, act:{action-1} ,ave r:{sum(self.reward_list)/len(self.reward_list):.2f},score:{}")
+        print(f"real m:{self.real_mass:.3f} estimated m: {self.mass_estimate:.3f}, act:{action-1} ")
         return observation, reward, done, info
     
     

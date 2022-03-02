@@ -3,7 +3,7 @@ import numpy as np
 from DDPG.ddpg_torch import Agent
 from DDPG.utils import plot_learning_curve
 from quad_gym_continuous import Quadrotor_Env
-from display.GUI_quadcopter import plot_quad_3d , init_ani
+from display.GUI_quadcopter import plot_quad_3d  
 import global_var
 
 def main():
@@ -69,8 +69,8 @@ def main():
             return env.quadcopter.world_frame()
         try:
             plot_quad_3d(np.vstack((env.startpoint , env.targetpoint)), ani_loop)
-        except ValueError:
-            init_ani()
+        except :
+            pass
         score_history.append(score)
         avg_score = np.mean(score_history[-100:])
         

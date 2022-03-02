@@ -130,7 +130,7 @@ class Quadrotor_Env_discrete(gym.Env):
         self.k_s = list()
             
         self.state_his = list() # observation
-        self.Mass_his = list()
+        self.Mass_his = list() # estimation
         self.Ixx_his = list()
         self.Iyy_his = list()
         self.Izz_his = list()
@@ -179,6 +179,8 @@ class Quadrotor_Env_discrete(gym.Env):
         info = {}#f"mass error: {100*(sum(Mass_his)/len(Mass_his)-self.real_mass)/self.real_mass:.3f}%"
         info["msg"] = ""
         info["result"] = False
+        info["real_mass"] = self.real_mass
+        info["estimated_mass_ave"] = 0
         self.target_quad_vector = self.targetpoint - self.sensor.position_noisy()
         two_directionvectors = np.hstack((self.target_quad_vector  , self.target_startpoint_vector ))
          
@@ -194,6 +196,9 @@ class Quadrotor_Env_discrete(gym.Env):
                 reward+= -10000
                 done = True
                 info["msg"] = f"calculation error"
+                info["result"] = False
+                info["real_mass"] = self.real_mass
+                info["estimated_mass_ave"] = sum(self.Mass_his)/len(self.Mass_his)
                 states_and_input = np.hstack((self.state , self.system_input ))             
                 observation = np.hstack((states_and_input , two_directionvectors)) 
                 return observation, reward, done, info
@@ -203,6 +208,9 @@ class Quadrotor_Env_discrete(gym.Env):
                 reward+= -10000
                 done = True
                 info["msg"]= f"went out of boundary{self.quadcopter.position()}"
+                info["result"] = False
+                info["real_mass"] = self.real_mass
+                info["estimated_mass_ave"] = sum(self.Mass_his)/len(self.Mass_his)
                 states_and_input = np.hstack((self.state , self.system_input ))             
                 observation = np.hstack((states_and_input , two_directionvectors)) 
                 return observation, reward, done, info
@@ -211,6 +219,9 @@ class Quadrotor_Env_discrete(gym.Env):
                 done = True
                 reward-=10000
                 info["msg"]= f"too much steps"
+                info["result"] = False
+                info["real_mass"] = self.real_mass
+                info["estimated_mass_ave"] = sum(self.Mass_his)/len(self.Mass_his)
                 states_and_input = np.hstack((self.state , self.system_input ))             
                 observation = np.hstack((states_and_input , two_directionvectors)) 
                 return observation, reward, done, info
@@ -219,7 +230,8 @@ class Quadrotor_Env_discrete(gym.Env):
                 done = True
                 info["msg"]= f"reached a target point!"
                 info["result"] = True
-                info["m average error"] = (sum(self.Mass_his)/len(self.Mass_his)*0.36+0.18-self.real_mass)/self.real_mass
+                info["real_mass"] = self.real_mass
+                info["estimated_mass_ave"] = sum(self.Mass_his)/len(self.Mass_his)
                 states_and_input = np.hstack((self.state , self.system_input ))             
                 observation = np.hstack((states_and_input , two_directionvectors)) 
                 return observation, reward, done, info
@@ -229,29 +241,36 @@ class Quadrotor_Env_discrete(gym.Env):
         """
         if self.mission == "hovering":
             #calculate error
-            if self.mass_estimate < -0.1:#  
-                reward+= -10000
+            if self.mass_estimate < 0: 
+                #reward+= -10000
                 done = True
                 info["msg"] = f"calculation error "
-
+                info["result"] = False
+                info["real_mass"] = self.real_mass
+                info["estimated_mass_ave"] = sum(self.Mass_his)/len(self.Mass_his)
                 states_and_input = np.hstack((self.state , self.system_input ))          
                 observation = np.hstack((states_and_input , two_directionvectors)) 
                 return observation, reward, done, info
 
             # went out of boundary
             if list(filter(lambda position: position <-0.5 or position> 10.5, self.quadcopter.position())) != []:
-                reward+= -10000
+                #reward+= -10000
                 done = True
                 info["msg"]= f"went out of boundary{self.quadcopter.position()}"
+                info["result"] = False
+                info["real_mass"] = self.real_mass
+                info["estimated_mass_ave"] = sum(self.Mass_his)/len(self.Mass_his)
                 states_and_input = np.hstack((self.state , self.system_input ))             
                 observation = np.hstack((states_and_input , two_directionvectors)) 
                 return observation, reward, done, info
             # finished iteration
             if  self.step_ctr > self.max_steps:
                 done = True
-                reward+=10000
+                #reward+=10000
                 info["msg"]= f"hovering iteration stopping"
-                info["m average error"] = (sum(self.Mass_his)/len(self.Mass_his)*0.36+0.18-self.real_mass)/self.real_mass
+                info["result"] = True
+                info["real_mass"] = self.real_mass
+                info["estimated_mass_ave"] = sum(self.Mass_his)/len(self.Mass_his)
                 states_and_input = np.hstack((self.state , self.system_input ))             
                 observation = np.hstack((states_and_input , two_directionvectors)) 
                 return observation, reward, done, info
@@ -262,7 +281,7 @@ class Quadrotor_Env_discrete(gym.Env):
         m2 = M[1][0]
         m3 = M[2][0]
         if self.mission == "hovering":
-            reward +=  - distance(self.sensor.position_noisy(), self.targetpoint) **3
+            reward +=  - (distance(self.sensor.position_noisy(), self.targetpoint) *10)**4
             self.reward_list.append(reward)
         elif self.mission == "approching":
             reward += -1
@@ -276,7 +295,7 @@ class Quadrotor_Env_discrete(gym.Env):
         two_directionvectors = np.hstack((self.target_quad_vector  , self.target_startpoint_vector ))
         observation = np.hstack((states_and_input , two_directionvectors))  
         
-        print(f"real m:{self.real_mass:.3f} estimated m: {self.mass_estimate:.3f}, act:{action-1} ,ave r:{sum(self.reward_list)/len(self.reward_list):.2f}")
+        print(f"real m:{self.real_mass:.3f} estimated m: {self.mass_estimate:.3f}, act:{action-1} ")
         return observation, reward, done, info
     
     
