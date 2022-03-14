@@ -7,7 +7,7 @@ import numpy as np
 
 class DeepQNetwork(nn.Module):
     def __init__(self, lr, input_dims, fc1_dims, fc2_dims,
-                 n_actions, save_path):
+                 n_actions ):
         super(DeepQNetwork, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
@@ -16,7 +16,7 @@ class DeepQNetwork(nn.Module):
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         self.fc3 = nn.Linear(self.fc2_dims, self.n_actions)
-        self.checkpoint_file = save_path
+        
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
@@ -28,18 +28,18 @@ class DeepQNetwork(nn.Module):
         actions = self.fc3(x)
 
         return actions
-    def save_checkpoint(self):
+    def save_checkpoint(self,path):
         print('... saving checkpoint ...')
-        T.save(self.state_dict(), self.checkpoint_file)
-    def load_checkpoint(self):
+        T.save(self.state_dict(), path)
+    def load_checkpoint(self,path):
         print('... loading checkpoint ...')
-        self.load_state_dict(T.load(self.checkpoint_file))
+        self.load_state_dict(T.load(path))
 
 class Agent:
     def __init__(self, gamma, epsilon, lr, input_dims, batch_size, n_actions,
-                 max_mem_size=100000, eps_end=0.05, eps_dec=1e-4,save_path = "./dqn_checkpoint" ):
+                 max_mem_size=100000, eps_end=0.05, eps_dec=5e-4 ):
         self.gamma = gamma
-        self.epsilon = epsilon
+        self.epsilon = epsilon  
         self.eps_min = eps_end
         self.eps_dec = eps_dec
         self.lr = lr
@@ -49,10 +49,10 @@ class Agent:
         self.mem_cntr = 0
         self.iter_cntr = 0
         self.replace_target = 100
-        self.save_path = save_path
+
         self.Q_eval = DeepQNetwork(lr, n_actions=n_actions,
                                    input_dims=input_dims,
-                                   fc1_dims=512, fc2_dims=256,save_path = self.save_path)
+                                   fc1_dims=512, fc2_dims=256)
         self.state_memory = np.zeros((self.mem_size, *input_dims),
                                      dtype=np.float32)
         self.new_state_memory = np.zeros((self.mem_size, *input_dims),
@@ -116,7 +116,7 @@ class Agent:
         self.iter_cntr += 1
         self.epsilon = self.epsilon - self.eps_dec \
             if self.epsilon > self.eps_min else self.eps_min
-    def save_models(self):
-        self.Q_eval.save_checkpoint()
-    def load_models(self):
-        self.Q_eval.load_checkpoint()
+    def save_models(self,path):
+        self.Q_eval.save_checkpoint(path)
+    def load_models(self,path):
+        self.Q_eval.load_checkpoint(path)

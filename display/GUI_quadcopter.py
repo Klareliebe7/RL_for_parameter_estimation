@@ -21,7 +21,7 @@ def plot_quad_3d(waypoints, get_world_frame):
     ax = fig.add_axes([0, 0, 1, 1], projection='3d')
     ax.plot([], [], [], '-', c='g',markersize=30)[0]
     ax.plot([], [], [], '-', c='brown',markersize=22)[0]
-    ax.plot([], [], [], 'o', c='blue', marker='o', markevery=2)[0]
+    ax.plot([], [], [], 'o', c='blue',  markevery=2)[0]
     ax.plot([], [], [], '*', c='red', markersize=8)[0]
     ax.plot([], [], [], '.', c='blue', markersize=1)[0]
     set_limit((0, 10), (0, 10), (0, 10))
