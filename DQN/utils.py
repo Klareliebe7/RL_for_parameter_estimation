@@ -3,16 +3,16 @@ import numpy as np
 import gym
 
 def plotLearning(x, scores,scores_error, epsilons, filename, lines=None):
-    fig=plt.figure()
-    ax=fig.add_subplot(111, label="1" )
-    ax2=fig.add_subplot(111, label="2" )
+    fig=plt.figure(figsize=(18,6), dpi=300)
+    ax=fig.add_subplot(111, label="1"  )
+    ax2=fig.add_subplot(111, label="2", frame_on=False  )
 
     ax.plot(x, epsilons, color="C0",label = "epsilon")
     ax.set_xlabel("Simulations", color="C0")
     ax.set_ylabel("Epsilon", color="C0")
     ax.tick_params(axis='x', colors="C0")
     ax.tick_params(axis='y', colors="C0")
-    ax2.errorbar(x, scores, yerr=scores_error, fmt='-o',color="C1",label = "Eva. reward")
+    ax2.errorbar(x, scores, yerr=scores_error, fmt='-o',color="C1",label = "Eva. reward",elinewidth = 1,ms = 5,mfc="wheat",mec="salmon",capsize = 3)
     #ax2.xaxis.tick_top()
     ax2.axes.get_xaxis().set_visible(False)
     ax2.yaxis.tick_right()
@@ -135,6 +135,19 @@ def plot_z(x, z_target, z_actual,filename ):
     ax.plot(x, z_actual, color="r",label = "Actual altitude")
     ax.set_xlabel("t"  )
     ax.set_ylabel("Z position")
+    ax.tick_params(axis='x' )
+    ax.tick_params(axis='y' )
+    ax.legend()
+    plt.savefig(filename)
+def plot_line(x, y,title_,x_label,y_label,legend,  filename ):
+    fig, ax = plt.subplots(figsize=(18,6)  , dpi=300)
+    plt.title(title_)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+     
+    ax.plot(x, y, color="r",label = legend)
+    ax.set_xlabel(x_label  )
+    ax.set_ylabel(y_label)
     ax.tick_params(axis='x' )
     ax.tick_params(axis='y' )
     ax.legend()

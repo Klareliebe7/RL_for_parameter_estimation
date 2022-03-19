@@ -76,6 +76,7 @@ class Quadrotor_Env_discrete(gym.Env):
     	
         self.mission = "hovering"   
         self.step_ctr = 0
+        self.weight_shift = 0
         self.animation_frequency = 50
         self.control_frequency = 200
         self.control_iterations = self.control_frequency /  self.animation_frequency
@@ -130,7 +131,7 @@ class Quadrotor_Env_discrete(gym.Env):
 
 
 	# discrete action space
-        self.action_space = spaces.Discrete(3)
+        self.action_space = spaces.Discrete(5)
     # continious observation space
         if self.mission == "hovering":
             obs_max = np.array([10.0,10.0,10.0,#xyz
@@ -174,7 +175,22 @@ class Quadrotor_Env_discrete(gym.Env):
         
         done = False
         reward = 0
-        self.mass_estimate += 0.01*(action-1)
+        if action == 0:
+            self.mass_estimate = self.mass_estimate - 0.002
+            self.weight_shift = self.weight_shift -0.002
+        elif action == 1:
+            self.mass_estimate = self.mass_estimate - 0.01
+            self.weight_shift = self.weight_shift -0.01
+        elif action == 2:
+            pass
+        elif action == 3:
+            self.mass_estimate = self.mass_estimate + 0.01
+            self.weight_shift = self.weight_shift +0.01
+        elif action == 4:
+            self.mass_estimate = self.mass_estimate + 0.002
+            self.weight_shift = self.weight_shift +0.002
+        
+        
         if self.mass_estimate < 0.15:
             self.mass_estimate = 0.15
         elif self.mass_estimate> 0.57:
@@ -207,7 +223,7 @@ class Quadrotor_Env_discrete(gym.Env):
         if self.mission == "approching":
             #calculate error                                                                                         
             if self.mass_estimate  < -0.1:# or a0<0 or a1<0 or a2<0:
-                #reward+= -10000
+                 
                 done = True
                 info["msg"] = f"calculation error"
                 info["result"] = False
@@ -262,10 +278,20 @@ class Quadrotor_Env_discrete(gym.Env):
             """
             
             self.z.append(self.sensor.position_noisy()[2])
- 
+            #estimate exceed limit
+            if np.absolute(self.weight_shift)>0.25:
+                reward =  - 10#+reward_cal_for_hovering(reward,self.sensor,self.targetpoint,self.weight_shift)  
+                done = True
+                info["msg"] = f"estimate exceed limit"
+                info["result"] = False
+                info["real_mass"] = self.real_mass
+                info["estimated_mass_ave"] = sum(self.Mass_his)/len(self.Mass_his)    
+                # info["reward"].append()                   
+                observation = np.hstack((self.state[index_from:index_to] , self.system_input ))  
+                return observation, reward, done, info
             #calculate error
             if self.mass_estimate < 0: 
-                reward =  reward_cal_for_hovering(reward,self.sensor,self.targetpoint,action) 
+                reward =  - 10#+reward_cal_for_hovering(reward,self.sensor,self.targetpoint,self.weight_shift)  
                 done = True
                 info["msg"] = f"calculation error "
                 info["result"] = False
@@ -277,7 +303,7 @@ class Quadrotor_Env_discrete(gym.Env):
 
             # went out of boundary
             if list(filter(lambda position: position <-0.5 or position> 10.5, self.quadcopter.position())) != []:
-                reward =   reward_cal_for_hovering(reward,self.sensor,self.targetpoint,action) 
+                reward =   - 10 #+reward_cal_for_hovering(reward,self.sensor,self.targetpoint,self.weight_shift)  
                 done = True
                 info["msg"]= f"went out of boundary{self.quadcopter.position()}"
                 info["result"] = False
@@ -302,7 +328,7 @@ class Quadrotor_Env_discrete(gym.Env):
         m2 = M[1][0]
         m3 = M[2][0]
         if self.mission == "hovering":# entrophy of action, other solutions and comparation
-            reward = reward_cal_for_hovering(reward,self.sensor,self.targetpoint,action)  
+            reward = reward_cal_for_hovering(reward,self.sensor,self.targetpoint,self.weight_shift)  
              
         elif self.mission == "approching":
             reward += - (distance(self.sensor.position_noisy(), self.targetpoint) *10)**3 -100
@@ -314,7 +340,7 @@ class Quadrotor_Env_discrete(gym.Env):
         
         if self.mission == "hovering":
             observation = np.hstack((self.state[index_from:index_to] , self.system_input ))  
-            print(f"real m:{self.real_mass:.2f} estimated m: {self.mass_estimate:.2f}, act:{action-1} ")
+            #print(f"real m:{self.real_mass:.2f} estimated m: {self.mass_estimate:.2f}, act:{action-1}, reward:{reward:.2f} ")
             return observation, reward, done, info
 
         elif self.mission == "approching":
@@ -323,7 +349,7 @@ class Quadrotor_Env_discrete(gym.Env):
             two_directionvectors = np.hstack((self.target_quad_vector  , self.target_startpoint_vector ))
             observation = np.hstack((states_and_input , two_directionvectors))  
             
-            print(f"real m:{self.real_mass:.2f} estimated m: {self.mass_estimate:.2f}, act:{action-1} ")
+            #print(f"real m:{self.real_mass:.2f} estimated m: {self.mass_estimate:.2f}, act:{action-1} ")
             return observation, reward, done, info
     
     
@@ -347,6 +373,7 @@ class Quadrotor_Env_discrete(gym.Env):
         self.k = [0]
         self.yaw = np.array([[0], [0], [0], [0],[0],[0]])
         self.startpoint = np.array([5, 5, 5])#
+        self.weight_shift = 0
         if self.mission == "hovering":
             self.targetpoint =  self.startpoint 
         elif self.mission == "approching":
@@ -395,8 +422,7 @@ def attitudeControl(quad,sensor, time, k, targetpoint,dyaw,I,mass):
     control_frequency = 200
     dt = 1.0 /   control_frequency
     F, M = LQG.controller(quad,  sensor, I,mass,targetpoint,dyaw,dt)
-    #q0, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11 = quad.state
-    #state_his.append(list(sensor.Y_obs3().reshape(1, 12)[0])) 暂时关闭
+   
     quad.update(dt, F, M)
     time[0] += dt
     k[0] +=1
@@ -406,5 +432,18 @@ def attitudeControl(quad,sensor, time, k, targetpoint,dyaw,I,mass):
    
 
 
-def reward_cal_for_hovering(reward,sensor,targetpoint,action):
-    return reward - np.absolute(sensor.Y_obs2().reshape(12,)[5]) - np.absolute(sensor.Y_obs2().reshape(12,)[2] - targetpoint[2])- np.absolute(action-1)*0.1
+def reward_cal_for_hovering(reward,sensor,targetpoint,weight_shift):
+    # NR3&NR4
+    # z_dist_reward = 1-((np.absolute(sensor.Y_obs2().reshape(12,)[2] - targetpoint[2])) /5)**0.4
+    # z_speed_reward = 1-(np.absolute(sensor.Y_obs2().reshape(12,)[5])/2)**0.4
+    # weight_shift_reward = 1/(np.absolute(weight_shift)-51)
+    # return reward + z_dist_reward*2 + z_speed_reward + weight_shift_reward
+    #NR5
+    # dist = np.sqrt(((np.absolute(sensor.Y_obs2().reshape(12,)[2] - targetpoint[2]))/5)**2 +(np.absolute(sensor.Y_obs2().reshape(12,)[5])/5)**2)
+    # dist = 1-dist
+    #NR6
+    dist = np.sqrt(((np.absolute(sensor.Y_obs2().reshape(12,)[2] - targetpoint[2]))/5)**2 +(np.absolute(sensor.Y_obs2().reshape(12,)[5])/5)**2)
+    dist = 1-dist
+    # weight_shift_reward = 1/(np.absolute(weight_shift)-510)
+    return reward + dist#+weight_shift_reward*10
+    

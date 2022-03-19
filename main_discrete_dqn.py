@@ -1,27 +1,27 @@
 import gym
 import numpy as np
 from DQN.DQN import Agent
-from DQN.utils import plotLearning,plot_estmation,plot_z
+from DQN.utils import plotLearning,plot_estmation,plot_z,plot_line
 from quad_gym_descrete import Quadrotor_Env_discrete
 from display.GUI_quadcopter import plot_quad_3d  
 import global_var
 import json
 from os import path ,remove
 def main():
-    save_data = True
+    save_data = False
     train = True
     env = Quadrotor_Env_discrete()
     if train:
-        agent = Agent(gamma=0.99, epsilon=1.0, batch_size=64, n_actions=3, eps_end=0.01,
+        agent = Agent(gamma=0.99, epsilon=1.0, batch_size=64, n_actions=5, eps_end=0.01,
                     input_dims=env.observation_space.shape, lr=0.001)
-        n_games = 200
+        n_games = 10  
     else:
         agent = Agent(gamma=0.99, epsilon= 0, batch_size=64, n_actions=3, eps_end=0.01,
                     input_dims=env.observation_space.shape, lr=0.001)
         n_games = 10 
         agent.load_models("./DQN/check_point/dqn_model_number_55")
     score_history, eps_history = [], []
-    ave_reward,reward_error,z_height = [],[],[]
+    ave_reward,reward_error,z_height,z_velocity = [],[],[],[]
     reward_list = []
     filename = f'DQN_{n_games}games_'
 
@@ -48,6 +48,7 @@ def main():
         def ani_loop(i_frame):
             nonlocal estimated_mass
             nonlocal z_height
+            nonlocal z_velocity
             nonlocal mass
             nonlocal reward_list
             nonlocal ave_reward
@@ -76,6 +77,7 @@ def main():
             observation = observation_
             mass.append(env.real_mass)
             z_height.append(env.sensor.position_noisy()[2])
+            z_velocity.append(observation_[5])
             estimated_mass.append(env.mass_estimate)
             if done:
                 ave_reward.append(np.mean(reward_list, axis=0) )
@@ -95,10 +97,10 @@ def main():
         eps_history.append(agent.epsilon)
         avg_score = np.mean(score_history[-100:])
         if train:
-            #if avg_score > best_score:
+            # if avg_score > best_score:
             save_path_ = "./DQN/check_point/dqn_model_"
             best_score = avg_score
-            save_path = save_path_ + "number_" + str(i+1)
+            save_path = save_path_ + "simu_nr_" + str(i+1)
             agent.save_models(save_path)
 
         print('episode ', i, 'score %.1f' % score,
@@ -110,7 +112,8 @@ def main():
     z_target = [5 for _ in range(len(z_height))]
     x = [i+1 for i in range(len(z_height))]
     plot_z(x, z_target, z_height,filename +"drone_altitude")
-
+    x = [i+1 for i in range(len(z_velocity))]
+    plot_line(x, z_velocity,"V in z axis","timesteps","v","Velocity", filename +"drone_velocity")
 
 if __name__ == "__main__":
 

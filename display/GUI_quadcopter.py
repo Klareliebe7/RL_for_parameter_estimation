@@ -41,7 +41,7 @@ def plot_quad_3d(waypoints, get_world_frame):
         print('Saving gif')
         an.save('df3_airdrag.gif', dpi=80, writer='imagemagick', fps=60)
     else:
-        
+        #pass
         plt.show( )
     
 def plot_waypoints(waypoints):
