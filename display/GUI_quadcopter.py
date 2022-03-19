@@ -5,13 +5,13 @@ import matplotlib.animation as animation
 import numpy as np
 import sys
 import global_var
-history = np.zeros((3000,3))
+
 count = 0
-show_animation = True################## still not working
-def init_ani():
-    history = np.zeros((3000,3))
-    count = 0
-    #an.frame_seq = an.new_frame_seq() 
+ 
+ 
+
+ 
+ 
 def plot_quad_3d(waypoints, get_world_frame):
     """
     get_world_frame is a function which return the "next" world frame to be drawn
@@ -21,7 +21,7 @@ def plot_quad_3d(waypoints, get_world_frame):
     ax = fig.add_axes([0, 0, 1, 1], projection='3d')
     ax.plot([], [], [], '-', c='g',markersize=30)[0]
     ax.plot([], [], [], '-', c='brown',markersize=22)[0]
-    ax.plot([], [], [], 'o', c='blue', marker='o', markevery=2)[0]
+    ax.plot([], [], [], 'o', c='blue',  markevery=2)[0]
     ax.plot([], [], [], '*', c='red', markersize=8)[0]
     ax.plot([], [], [], '.', c='blue', markersize=1)[0]
     set_limit((0, 10), (0, 10), (0, 10))
@@ -41,8 +41,8 @@ def plot_quad_3d(waypoints, get_world_frame):
         print('Saving gif')
         an.save('df3_airdrag.gif', dpi=80, writer='imagemagick', fps=60)
     else:
-        if show_animation:
-            plt.show( )
+        #pass
+        plt.show( )
     
 def plot_waypoints(waypoints):
     ax = plt.gca()
@@ -58,7 +58,7 @@ def set_limit(x, y, z):
     ax.set_zlim(z)
 
 def anim_callback(i, get_world_frame):
-    if   global_var.get_value("done") == True and show_animation:
+    if   global_var.get_value("done") == True  :
         plt.close()
         return 
     frame = get_world_frame(i)   

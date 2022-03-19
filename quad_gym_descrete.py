@@ -10,7 +10,7 @@ from EM_parameter_estimation.em_est import em_estimation
 from sim.result_plot import Plotresult
 from utils.check_distance import distance
 import json
- 
+ #S319 1st etage
 class Quadrotor_Env_discrete(gym.Env):
     """
     ## Description
@@ -35,22 +35,22 @@ class Quadrotor_Env_discrete(gym.Env):
     |   4   | Vx_o     |  -1.5  |   3   |
     |   5   | Vy_o     |  -1.5  |   3   |
     |   6   | Vz_o     |  -1.5  |   3   |
-    |   7   | phi_o    |  -1.0  |   1   |
-    |   8   | theta_o  |  -1.0  |   1   |
-    |   9   | psi_o    |  -1.0  |   1   |
-    | 10  | Wx_o     |  -20   |  20   |
-    | 11  | Wy_o     |  -20   |  20   |
-    | 12  | Wz_o     |  -20   |  20   |
+    # |   7   | phi_o    |  -1.0  |   1   |
+    # |   8   | theta_o  |  -1.0  |   1   |
+    # |   9   | psi_o    |  -1.0  |   1   |
+    # | 10  | Wx_o     |  -20   |  20   |
+    # | 11  | Wy_o     |  -20   |  20   |
+    # | 12  | Wz_o     |  -20   |  20   |
     | 13  | m1          |   0    |   7   |
     | 14  | m2       |   0    |   7   |
     | 15  | m3       |   0    |   7   |
     | 16  | F            |   0    |   7   |
-    |   17   | Xr(target x)-x_o      |   0    |   7   | target direction to quad
-    |   18   | Yr(target y)-y_o      |   0    |   7   |
-    |   19   | Zr(target z)-z_o      |   0    |   7   |
-    |   20   | Xr(target x)-Xs      |   0    |   7   | target direction to start point
-    |   21   | Yr(target y)-Ys      |   0    |   7   |
-    |   22   | Zr(target z)-Ys      |   0    |   7   | 
+    # |   17   | Xr(target x)-x_o      |   0    |   7   | target direction to quad
+    # |   18   | Yr(target y)-y_o      |   0    |   7   |
+    # |   19   | Zr(target z)-z_o      |   0    |   7   |
+    # |   20   | Xr(target x)-Xs      |   0    |   7   | target direction to start point
+    # |   21   | Yr(target y)-Ys      |   0    |   7   |
+    # |   22   | Zr(target z)-Ys      |   0    |   7   | 
 
  
     ## Rewards
@@ -74,41 +74,35 @@ class Quadrotor_Env_discrete(gym.Env):
 
     	# initial parameters
     	
-        self.mission = "hovering"
-        if self.mission == "hovering":
-            self.max_steps = 1000
-            self.reward_list = []
-        elif self.mission == "approching":
-            self.max_steps = 1000
+        self.mission = "hovering"   
         self.step_ctr = 0
+        self.weight_shift = 0
         self.animation_frequency = 50
         self.control_frequency = 200
         self.control_iterations = self.control_frequency /  self.animation_frequency
         self.dt = 1.0 /  self.control_frequency
         self.time = [0.0]
         self.k = [0]
-        #self.waypoints = np.array([[0.5, 1, 0], [4, 3, 3], [3, 5, 4], [6, 4, 5],[4,3,4],[2,1,5]]) 
         self.yaw = np.array([[0], [0], [0], [0],[0],[0]])
-        
         self.startpoint = np.array([5, 5, 5])#
         if self.mission == "hovering":
-            self.targetpoint =  self.startpoint  
+            self.targetpoint =  self.startpoint 
+            self.max_steps = 1000
+                      
         elif self.mission == "approching":
-            self.targetpoint =  np.array([6, 6, 9])#np.random.rand(3)*10# 
-        
+            self.targetpoint =  np.random.rand(3)*10# 
+            self.max_steps = 300
         self.dyaw =  self.yaw[1]
         self.pos =  self.startpoint
         self.attitude = (0, 0, 0)
-        #self.extendkalmanfilter = extendKalmanFilter()
-        ###
-        self.mass_estimate = 0.36
-    	###
-        self.mass_variant_param = np.random.rand()*2+1
+        self.mass_estimate =  0.36
+        self.mass = [0.36]
+        self.mass_variant_param =  np.random.rand()*2+1
         self.real_mass = 0.18*self.mass_variant_param
         self.real_I = np.array([(0.00025*self.mass_variant_param, 0, 0),(0, 0.00031*self.mass_variant_param, 0),(0, 0, 0.00020*self.mass_variant_param)])
         self.quadcopter = Quadcopter(self.pos, self.attitude,self.real_mass,self.real_I )
         self.sensor = Sensor()
-        #self.ii = 1
+ 
         self.a0 = 0.0002
         self.a1 = 0.0003	
         self.a2 = 0.0002
@@ -118,9 +112,8 @@ class Quadrotor_Env_discrete(gym.Env):
         self.invI = np.array([[1 /  self.a0, 0, 0],
                                                 [0, 1 /  self.a1, 0],
                                                 [0, 0, 1 /  self.a2]], dtype=np.float32)
-        self.mass = [0.2]#np.random.normal(0.18, np.sqrt(0.5))
+        
         self.viewer = None
-        self.system_input = np.array([0,0,0,0])
         self.target_startpoint_vector =  self.targetpoint  -self.startpoint
 
 # variables to plot
@@ -128,7 +121,7 @@ class Quadrotor_Env_discrete(gym.Env):
         self.M_t = list()  # Torque
         self.t_s = list()  # simulation time
         self.k_s = list()
-            
+        self.z = []    
         self.state_his = list() # observation
         self.Mass_his = list() # estimation
         self.Ixx_his = list()
@@ -138,34 +131,70 @@ class Quadrotor_Env_discrete(gym.Env):
 
 
 	# discrete action space
-        self.action_space = spaces.Discrete(3)
-# continious observation space
-        obs_max = np.array([10.0,10.0,10.0,
-                                                    3.0,3.0,3.0,
-                                                    1.0,1.0,1.0,
-                                                    20.0,20.0,20.0,
-                                                    10.0,10.0,10.0,
-                                                    10,10.0,10.0,10.0,
-                                                    10.0,10.0,10.0], dtype=np.float32)
-        obs_min = np.array([0.0,0.0,0.0,
-                                                    -1.5,-1.5,-1.5,
-                                                    -1.0,-1.0,-1.0,
-                                                    -20.0,-20.0,-20.0,
-                                                    0.0,0.0,0.0,
-                                                    0.0,0.0,0.0,0.0,
-                                                    0.0,0.0,0.0], dtype=np.float32)   
-        self.observation_space = spaces.Box(low=obs_min, high=obs_max, dtype=np.float32)
-        self.state = np.array([0.0,0.0,0.0,
-                                                    0.0,0.0,0.0,
-                                                    0.0,0.0,0.0,
-                                                    0.0,0.0,0.0], dtype=np.float32)
+        self.action_space = spaces.Discrete(5)
+    # continious observation space
+        if self.mission == "hovering":
+            obs_max = np.array([10.0,10.0,10.0,#xyz
+                                3.0,3.0,3.0,#v
+ 
+                                10.0,10.0,10.0,10.0#M,F
+                                ], dtype=np.float32)
+            obs_min = np.array([0.0,0.0,0.0,
+                                -1.5,-1.5,-1.5,
+                                
+                                0.0,0.0,0.0,0.0], dtype=np.float32)   
+            self.observation_space = spaces.Box(low=obs_min, high=obs_max, dtype=np.float32)
+            self.state = np.array([0.0,0.0,0.0,
+                                    0.0,0.0,0.0 ], dtype=np.float32)
+        
+        
+        
+        elif self.mission == "approching":
+            obs_max = np.array([10.0,10.0,10.0,
+                                                        3.0,3.0,3.0,
+                                                        1.0,1.0,1.0,
+                                                        20.0,20.0,20.0,
+                                                        10.0,10.0,10.0,
+                                                        10,10.0,10.0,10.0,
+                                                        10.0,10.0,10.0], dtype=np.float32)
+            obs_min = np.array([0.0,0.0,0.0,
+                                                        -1.5,-1.5,-1.5,
+                                                        -1.0,-1.0,-1.0,
+                                                        -20.0,-20.0,-20.0,
+                                                        0.0,0.0,0.0,
+                                                        0.0,0.0,0.0,0.0,
+                                                        0.0,0.0,0.0], dtype=np.float32)   
+            self.observation_space = spaces.Box(low=obs_min, high=obs_max, dtype=np.float32)
+            self.state = np.array([0.0,0.0,0.0,
+                                                        0.0,0.0,0.0,
+                                                        0.0,0.0,0.0,
+                                                        0.0,0.0,0.0], dtype=np.float32)
 	
     def step(self, action):
         """action is one of hold ascend descend."""
         
         done = False
         reward = 0
-        self.mass_estimate += 0.01*(action-1)
+        if action == 0:
+            self.mass_estimate = self.mass_estimate - 0.002
+            self.weight_shift = self.weight_shift -0.002
+        elif action == 1:
+            self.mass_estimate = self.mass_estimate - 0.01
+            self.weight_shift = self.weight_shift -0.01
+        elif action == 2:
+            pass
+        elif action == 3:
+            self.mass_estimate = self.mass_estimate + 0.01
+            self.weight_shift = self.weight_shift +0.01
+        elif action == 4:
+            self.mass_estimate = self.mass_estimate + 0.002
+            self.weight_shift = self.weight_shift +0.002
+        
+        
+        if self.mass_estimate < 0.15:
+            self.mass_estimate = 0.15
+        elif self.mass_estimate> 0.57:
+            self.mass_estimate =0.57
         self.Mass_his.append(self.mass_estimate )       
         ratio = self.mass_estimate/0.18
         I = np.array([(0.00025, 0, 0),
@@ -174,13 +203,14 @@ class Quadrotor_Env_discrete(gym.Env):
         self.I = I*ratio
         invI = np.linalg.inv(I)
         self.invI = invI/ratio
-        self.mass[0] =self.mass_estimate
+        
 
-        info = {}#f"mass error: {100*(sum(Mass_his)/len(Mass_his)-self.real_mass)/self.real_mass:.3f}%"
+        info = {}
         info["msg"] = ""
         info["result"] = False
         info["real_mass"] = self.real_mass
         info["estimated_mass_ave"] = 0
+        
         self.target_quad_vector = self.targetpoint - self.sensor.position_noisy()
         two_directionvectors = np.hstack((self.target_quad_vector  , self.target_startpoint_vector ))
          
@@ -193,7 +223,7 @@ class Quadrotor_Env_discrete(gym.Env):
         if self.mission == "approching":
             #calculate error                                                                                         
             if self.mass_estimate  < -0.1:# or a0<0 or a1<0 or a2<0:
-                reward+= -10000
+                 
                 done = True
                 info["msg"] = f"calculation error"
                 info["result"] = False
@@ -205,7 +235,7 @@ class Quadrotor_Env_discrete(gym.Env):
 
             # went out of boundary
             if list(filter(lambda position: position <-0.5 or position> 10.5, self.quadcopter.position())) != []:
-                reward+= -10000
+                #reward+= -100000
                 done = True
                 info["msg"]= f"went out of boundary{self.quadcopter.position()}"
                 info["result"] = False
@@ -217,7 +247,7 @@ class Quadrotor_Env_discrete(gym.Env):
             #too much steps
             if  self.step_ctr > self.max_steps:
                 done = True
-                reward-=10000
+                #reward-=100000
                 info["msg"]= f"too much steps"
                 info["result"] = False
                 info["real_mass"] = self.real_mass
@@ -228,6 +258,7 @@ class Quadrotor_Env_discrete(gym.Env):
             #reached a target point
             if distance(self.quadcopter.position(), self.targetpoint) < 0.1:
                 done = True
+                reward+=10000000
                 info["msg"]= f"reached a target point!"
                 info["result"] = True
                 info["real_mass"] = self.real_mass
@@ -240,94 +271,117 @@ class Quadrotor_Env_discrete(gym.Env):
         hovering
         """
         if self.mission == "hovering":
+            index_from = 0
+            index_to = 6
+            """
+            0~6 means that only input the position and speed into the NN
+            """
+            
+            self.z.append(self.sensor.position_noisy()[2])
+            #estimate exceed limit
+            if np.absolute(self.weight_shift)>0.25:
+                reward =  - 10#+reward_cal_for_hovering(reward,self.sensor,self.targetpoint,self.weight_shift)  
+                done = True
+                info["msg"] = f"estimate exceed limit"
+                info["result"] = False
+                info["real_mass"] = self.real_mass
+                info["estimated_mass_ave"] = sum(self.Mass_his)/len(self.Mass_his)    
+                # info["reward"].append()                   
+                observation = np.hstack((self.state[index_from:index_to] , self.system_input ))  
+                return observation, reward, done, info
             #calculate error
             if self.mass_estimate < 0: 
-                reward+= -10000
+                reward =  - 10#+reward_cal_for_hovering(reward,self.sensor,self.targetpoint,self.weight_shift)  
                 done = True
                 info["msg"] = f"calculation error "
                 info["result"] = False
                 info["real_mass"] = self.real_mass
-                info["estimated_mass_ave"] = sum(self.Mass_his)/len(self.Mass_his)
-                states_and_input = np.hstack((self.state , self.system_input ))          
-                observation = np.hstack((states_and_input , two_directionvectors)) 
+                info["estimated_mass_ave"] = sum(self.Mass_his)/len(self.Mass_his)    
+                # info["reward"].append()                   
+                observation = np.hstack((self.state[index_from:index_to] , self.system_input ))  
                 return observation, reward, done, info
 
             # went out of boundary
             if list(filter(lambda position: position <-0.5 or position> 10.5, self.quadcopter.position())) != []:
-                reward+= -10000
+                reward =   - 10 #+reward_cal_for_hovering(reward,self.sensor,self.targetpoint,self.weight_shift)  
                 done = True
                 info["msg"]= f"went out of boundary{self.quadcopter.position()}"
                 info["result"] = False
                 info["real_mass"] = self.real_mass
                 info["estimated_mass_ave"] = sum(self.Mass_his)/len(self.Mass_his)
-                states_and_input = np.hstack((self.state , self.system_input ))             
-                observation = np.hstack((states_and_input , two_directionvectors)) 
+                observation = np.hstack((self.state[index_from:index_to] , self.system_input ))
                 return observation, reward, done, info
             # finished iteration
             if  self.step_ctr > self.max_steps:
                 done = True
-                reward+=10000
+                #reward+=10000
                 info["msg"]= f"hovering iteration stopping"
                 info["result"] = True
                 info["real_mass"] = self.real_mass
                 info["estimated_mass_ave"] = sum(self.Mass_his)/len(self.Mass_his)
-                states_and_input = np.hstack((self.state , self.system_input ))             
-                observation = np.hstack((states_and_input , two_directionvectors)) 
+                observation = np.hstack((self.state[index_from:index_to] , self.system_input ))
                 return observation, reward, done, info
             
         for _ in range(4):
-            F,M = attitudeControl(self.quadcopter, self.sensor, self.time, self.k, self.targetpoint, self.dyaw, self.I, self.mass[0])
+            F,M = attitudeControl(self.quadcopter, self.sensor, self.time, self.k, self.targetpoint, self.dyaw, self.I, self.mass_estimate)
         m1 = M[0][0]
         m2 = M[1][0]
         m3 = M[2][0]
-        if self.mission == "hovering":
-            reward +=  - distance(self.sensor.position_noisy(), self.targetpoint) **3
-            self.reward_list.append(reward)
+        if self.mission == "hovering":# entrophy of action, other solutions and comparation
+            reward = reward_cal_for_hovering(reward,self.sensor,self.targetpoint,self.weight_shift)  
+             
         elif self.mission == "approching":
-            reward += -1
+            reward += - (distance(self.sensor.position_noisy(), self.targetpoint) *10)**3 -100
         #reward += -np.log(distance(self.sensor.position_noisy(), self.targetpoint)) - 1#-distance(self.sensor.position_noisy(), self.targetpoint) -1 
         # how many steps 
         self.state = self.sensor.Y_obs2().reshape(12,)
         self.step_ctr += 1
         self.system_input = np.array([m1, m2, m3, F])
-        self.target_quad_vector = self.targetpoint - self.sensor.position_noisy()
-        states_and_input = np.hstack((self.state , self.system_input ))
-        two_directionvectors = np.hstack((self.target_quad_vector  , self.target_startpoint_vector ))
-        observation = np.hstack((states_and_input , two_directionvectors))  
         
-        print(f"real m:{self.real_mass:.3f} estimated m: {self.mass_estimate:.3f}, act:{action-1} ,ave r:{sum(self.reward_list)/len(self.reward_list):.2f},score:{}")
-        return observation, reward, done, info
+        if self.mission == "hovering":
+            observation = np.hstack((self.state[index_from:index_to] , self.system_input ))  
+            #print(f"real m:{self.real_mass:.2f} estimated m: {self.mass_estimate:.2f}, act:{action-1}, reward:{reward:.2f} ")
+            return observation, reward, done, info
+
+        elif self.mission == "approching":
+            self.target_quad_vector = self.targetpoint - self.sensor.position_noisy()
+            states_and_input = np.hstack((self.state , self.system_input ))
+            two_directionvectors = np.hstack((self.target_quad_vector  , self.target_startpoint_vector ))
+            observation = np.hstack((states_and_input , two_directionvectors))  
+            
+            #print(f"real m:{self.real_mass:.2f} estimated m: {self.mass_estimate:.2f}, act:{action-1} ")
+            return observation, reward, done, info
     
     
     
     
     def reset(self):
         if self.mission == "hovering":
- 
-            self.reward_list = []
+            index_from = 0
+            index_to = 6
+            self.z = []
+             
         elif self.mission == "approching":
             pass
-        self.mass_estimate = 0.36
+        self.mass_estimate =  0.36
+        self.mass = [0.36]
         self.step_ctr = 0
         self.reward = 0
         self.state = np.array([5, 5, 5,
-		    0.0001,0.0001,0.0001,
-		    0.0001,0.0001,0.0001,
-		    0.0001,0.0001,0.0001], dtype=np.float32)
+		    0.0001,0.0001,0.0001 ], dtype=np.float32)
         self.time = [0.0]
         self.k = [0]
-        #self.waypoints = np.array([[0.5, 1, 0], [4, 3, 3], [3, 5, 4], [6, 4, 5],[4,3,4],[2,1,5]])
         self.yaw = np.array([[0], [0], [0], [0],[0],[0]])
-      
         self.startpoint = np.array([5, 5, 5])#
+        self.weight_shift = 0
         if self.mission == "hovering":
             self.targetpoint =  self.startpoint 
         elif self.mission == "approching":
-            self.targetpoint =  np.array([6, 6, 9])#np.random.rand(3)*10
+            self.targetpoint =   np.random.rand(3)*10
         self.dyaw = self.yaw[1]
         self.pos = self.startpoint
         self.attitude = (0, 0, 0)
-        self.mass_variant_param = np.random.rand()*2+1
+        self.mass_variant_param =  np.random.rand()*2+1
         self.real_mass = 0.18*self.mass_variant_param
         self.real_I = np.array([(0.00025*self.mass_variant_param, 0, 0),(0, 0.00031*self.mass_variant_param, 0),(0, 0, 0.00020*self.mass_variant_param)], dtype=np.float32)
         self.quadcopter = Quadcopter(self.pos, self.attitude,self.real_mass,self.real_I )
@@ -342,16 +396,22 @@ class Quadrotor_Env_discrete(gym.Env):
         self.invI = np.array([[1 / self.a0, 0, 0],
 	     [0, 1 / self.a1, 0],
 	     [0, 0, 1 / self.a2]], dtype=np.float32)
-        self.mass = [0.001]#np.random.normal(0.18, np.sqrt(0.5))
+        self.mass = self.mass_estimate 
         self.system_input = np.array([0,0,0,0], dtype=np.float32)
         self.viewer = None
         self.Mass_his = list()
-        self.target_startpoint_vector =  self.targetpoint  -self.startpoint
-        self.target_quad_vector = self.targetpoint - self.sensor.position_noisy()
-        two_directionvectors = np.hstack((self.target_quad_vector  , self.target_startpoint_vector ))
-        states_and_input = np.hstack((self.state , self.system_input ))             
-        observation = np.hstack((states_and_input , two_directionvectors)) 
-        return observation 
+        
+        if self.mission == "hovering":
+            observation = np.hstack((self.state[index_from:index_to] , self.system_input ))  
+            return observation 
+
+        elif self.mission == "approching":
+            self.target_startpoint_vector =  self.targetpoint  -self.startpoint
+            self.target_quad_vector = self.targetpoint - self.sensor.position_noisy()
+            two_directionvectors = np.hstack((self.target_quad_vector  , self.target_startpoint_vector ))
+            states_and_input = np.hstack((self.state , self.system_input ))             
+            observation = np.hstack((states_and_input , two_directionvectors)) 
+            return observation 
 
 
     def render(self):
@@ -362,8 +422,7 @@ def attitudeControl(quad,sensor, time, k, targetpoint,dyaw,I,mass):
     control_frequency = 200
     dt = 1.0 /   control_frequency
     F, M = LQG.controller(quad,  sensor, I,mass,targetpoint,dyaw,dt)
-    #q0, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11 = quad.state
-    #state_his.append(list(sensor.Y_obs3().reshape(1, 12)[0])) 暂时关闭
+   
     quad.update(dt, F, M)
     time[0] += dt
     k[0] +=1
@@ -373,4 +432,18 @@ def attitudeControl(quad,sensor, time, k, targetpoint,dyaw,I,mass):
    
 
 
-
+def reward_cal_for_hovering(reward,sensor,targetpoint,weight_shift):
+    # NR3&NR4
+    # z_dist_reward = 1-((np.absolute(sensor.Y_obs2().reshape(12,)[2] - targetpoint[2])) /5)**0.4
+    # z_speed_reward = 1-(np.absolute(sensor.Y_obs2().reshape(12,)[5])/2)**0.4
+    # weight_shift_reward = 1/(np.absolute(weight_shift)-51)
+    # return reward + z_dist_reward*2 + z_speed_reward + weight_shift_reward
+    #NR5
+    # dist = np.sqrt(((np.absolute(sensor.Y_obs2().reshape(12,)[2] - targetpoint[2]))/5)**2 +(np.absolute(sensor.Y_obs2().reshape(12,)[5])/5)**2)
+    # dist = 1-dist
+    #NR6
+    dist = np.sqrt(((np.absolute(sensor.Y_obs2().reshape(12,)[2] - targetpoint[2]))/5)**2 +(np.absolute(sensor.Y_obs2().reshape(12,)[5])/5)**2)
+    dist = 1-dist
+    # weight_shift_reward = 1/(np.absolute(weight_shift)-510)
+    return reward + dist#+weight_shift_reward*10
+    

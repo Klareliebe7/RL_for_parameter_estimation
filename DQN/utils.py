@@ -2,33 +2,28 @@ import matplotlib.pyplot as plt
 import numpy as np
 import gym
 
-def plotLearning(x, scores, epsilons, filename, lines=None):
-    fig=plt.figure()
-    ax=fig.add_subplot(111, label="1")
-    ax2=fig.add_subplot(111, label="2", frame_on=False)
+def plotLearning(x, scores,scores_error, epsilons, filename, lines=None):
+    fig=plt.figure(figsize=(18,6), dpi=300)
+    ax=fig.add_subplot(111, label="1"  )
+    ax2=fig.add_subplot(111, label="2", frame_on=False  )
 
-    ax.plot(x, epsilons, color="C0")
-    ax.set_xlabel("Game", color="C0")
+    ax.plot(x, epsilons, color="C0",label = "epsilon")
+    ax.set_xlabel("Simulations", color="C0")
     ax.set_ylabel("Epsilon", color="C0")
     ax.tick_params(axis='x', colors="C0")
     ax.tick_params(axis='y', colors="C0")
-
-    N = len(scores)
-    running_avg = np.empty(N)
-    for t in range(N):
-	    running_avg[t] = np.mean(scores[max(0, t-20):(t+1)])
-
-    ax2.scatter(x, running_avg, color="C1")
+    ax2.errorbar(x, scores, yerr=scores_error, fmt='-o',color="C1",label = "Eva. reward",elinewidth = 1,ms = 5,mfc="wheat",mec="salmon",capsize = 3)
     #ax2.xaxis.tick_top()
     ax2.axes.get_xaxis().set_visible(False)
     ax2.yaxis.tick_right()
     #ax2.set_xlabel('x label 2', color="C1")
-    ax2.set_ylabel('Score', color="C1")
+    ax2.set_ylabel('Average reward', color="C1")
     #ax2.xaxis.set_label_position('top')
     ax2.yaxis.set_label_position('right')
     #ax2.tick_params(axis='x', colors="C1")
     ax2.tick_params(axis='y', colors="C1")
-
+    ax.legend()
+    ax2.legend()
     if lines is not None:
         for line in lines:
             plt.axvline(x=line)
@@ -116,3 +111,44 @@ def make_env(env_name):
     env = MoveImgChannel(env)
     env = BufferWrapper(env, 4)
     return ScaleFrame(env)
+
+def plot_estmation(x, mass, estimated_mass, filename ):
+    fig, ax = plt.subplots(figsize=(18,6)  , dpi=300)
+    plt.title("Mass estimation")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.plot(x, estimated_mass, color="r", label = "Estimated mass")
+    ax.plot(x, mass, linestyle='dotted', color="b",label = "Real mass")
+    ax.set_xlabel("t" )
+    ax.set_ylabel("Mass of quad" )
+    ax.tick_params(axis='x', colors="C0")
+    ax.tick_params(axis='y', colors="C0")
+    ax.legend()
+    plt.savefig(filename)
+
+def plot_z(x, z_target, z_actual,filename ):
+    fig, ax = plt.subplots(figsize=(18,6)  , dpi=300)
+    plt.title("Altitude")
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.plot(x, z_target, color="b", linestyle='dotted',label = "Target altitude")
+    ax.plot(x, z_actual, color="r",label = "Actual altitude")
+    ax.set_xlabel("t"  )
+    ax.set_ylabel("Z position")
+    ax.tick_params(axis='x' )
+    ax.tick_params(axis='y' )
+    ax.legend()
+    plt.savefig(filename)
+def plot_line(x, y,title_,x_label,y_label,legend,  filename ):
+    fig, ax = plt.subplots(figsize=(18,6)  , dpi=300)
+    plt.title(title_)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+     
+    ax.plot(x, y, color="r",label = legend)
+    ax.set_xlabel(x_label  )
+    ax.set_ylabel(y_label)
+    ax.tick_params(axis='x' )
+    ax.tick_params(axis='y' )
+    ax.legend()
+    plt.savefig(filename)
